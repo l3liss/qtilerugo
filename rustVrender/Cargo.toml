@@ -1,4 +1,10 @@
+[package]
+name = "rust_qtile_helper"
+version = "0.1.0"
+edition = "2021"
+
 [dependencies]
-ash = "0.37.0"
-ash-window = "0.10.0"
-winit = "0.27.5"
+tokio = { version = "1", features = ["full"] }
+winit = "0.30"           # Use v0.27 so vulkano-win and our code agree
+vulkano = "0.35"
+vulkano-win = "0.34"
