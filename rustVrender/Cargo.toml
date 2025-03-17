@@ -5,6 +5,6 @@ edition = "2021"
 
 [dependencies]
 tokio = { version = "1", features = ["full"] }
-winit = "0.30"           # Use v0.27 so vulkano-win and our code agree
+winit = "0.27"           # Use v0.27 so vulkano-win and our code agree
 vulkano = "0.35"
 vulkano-win = "0.34"
