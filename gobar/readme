@@ -1,1 +1,67 @@
-status bar written in go
+GoBar: A Custom Go Taskbar for Qtile
+
+GoBar is a lightweight, customizable taskbar and system tray application written in Go. Designed for tiling window managers like Qtile, GoBar leverages modern Go libraries to display system information, launch applications, and integrate with your X11 environment.
+Features
+
+    Custom Taskbar UI:
+    Built using Fyne, the taskbar displays the current time, CPU usage, and network statistics in real time.
+
+    Start Menu:
+    A "Start Menu" button scans installed applications (via .desktop files) from /usr/share/applications and displays them in a scrollable list.
+
+    System Tray Integration:
+    Uses systray to add a system tray with menu items (for example, launching Steam or Flameshot).
+
+    X11 Dock Properties:
+    Sets X11 dock properties using xgb and xproto to reserve screen space and ensure that Qtile does not overlap the bar.
+
+    Real-Time Updates:
+    Updates the time, CPU, and network usage every second using gopsutil.
+
+Requirements
+
+    Go 1.16 or later.
+    An X11 environment.
+    Required Go modules (see go.mod for details).
+
+Installation
+
+    Clone the Repository:
+
+git clone https://github.com/yourusername/gobar.git
+cd gobar
+
+Install Dependencies:
+
+Ensure your Go modules are up-to-date:
+
+go mod tidy
+
+Build the Application:
+
+    go build -o gobar
+
+Usage
+
+Run the taskbar:
+
+./gobar
+
+This will start GoBar, creating a taskbar window with the configured dimensions (default is 1920x30). The application also initializes the system tray with menu items (e.g., Steam, Flameshot, Quit) and displays real-time system stats.
+Configuration
+
+    Screen Width & Bar Height:
+    You can adjust the screenWidth and barHeight variables in main.go to match your screen resolution and desired taskbar height.
+
+    Tray Icon:
+    The system tray icon is loaded from /home/junktop/.config/qtile/icon.png. Update the file path as needed.
+
+    Start Menu Applications:
+    The start menu scans for .desktop files in /usr/share/applications. Modify the path in the scanApplications function if your system uses a different location.
+
+Contributing
+
+Contributions are welcome! If you have improvements, bug fixes, or ideas for new features, please open an issue or submit a pull request.
+License
+
+This project is licensed under the MIT License. See the LICENSE file for details.
