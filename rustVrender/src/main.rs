@@ -16,12 +16,13 @@ use winit::window::WindowBuilder;
 use vulkano::VulkanLibrary;
 use vulkano::instance::{Instance, InstanceCreateInfo, InstanceExtensions};
 use vulkano::device::{Device, DeviceCreateInfo, DeviceExtensions, QueueCreateInfo};
-use vulkano::swapchain::Surface; // Use the new API
+use vulkano::swapchain::Surface; // New API for surface creation
 
 /// Defines commands that the window renderer understands.
 #[derive(Debug, Deserialize)]
 enum RendererCommand {
     SpawnWindow,
+    SpawnStatusBar,
     // You can add more commands here.
 }
 
@@ -32,6 +33,7 @@ async fn listen_for_commands(socket_path: &str) -> tokio::io::Result<()> {
     }
     let listener = UnixListener::bind(socket_path)?;
     println!("Listening on Unix socket: {}", socket_path);
+
     loop {
         let (stream, _) = listener.accept().await?;
         tokio::spawn(async move {
@@ -46,6 +48,13 @@ async fn listen_for_commands(socket_path: &str) -> tokio::io::Result<()> {
                         thread::spawn(|| {
                             create_window();
                         });
+                    }
+                    Ok(RendererCommand::SpawnStatusBar) => {
+                        println!("Spawning Go status bar...");
+                        // Replace "go_status_bar" with the correct command or full path.
+                        if let Err(e) = std::process::Command::new("./go_status_bar").spawn() {
+                            println!("Failed to spawn go_status_bar: {}", e);
+                        }
                     }
                     Err(e) => {
                         println!("Invalid command: {}. Received: {}", e, trimmed);
@@ -89,12 +98,15 @@ fn create_window() {
         .expect("No physical device found");
 
     // Find a queue family that supports graphics and presentation.
-    let queue_family = physical.queue_family_properties()
+    let queue_family = physical
+        .queue_family_properties()
         .iter()
         .enumerate()
         .find(|(index, q)| {
             q.queue_flags.contains(vulkano::device::QueueFlags::GRAPHICS)
-                && physical.surface_support(*index as u32, &*surface).unwrap_or(false)
+                && physical
+                    .surface_support(*index as u32, &*surface)
+                    .unwrap_or(false)
         })
         .map(|(index, _)| index as u32)
         .expect("Couldn't find a graphical queue family that supports presentation");
@@ -126,7 +138,11 @@ fn create_window() {
     // Run the event loop.
     event_loop.run(move |event, _, control_flow| {
         *control_flow = ControlFlow::Wait;
-        if let Event::WindowEvent { event: WindowEvent::CloseRequested, .. } = event {
+        if let Event::WindowEvent {
+            event: WindowEvent::CloseRequested,
+            ..
+        } = event
+        {
             println!("Window closed.");
             *control_flow = ControlFlow::Exit;
         }
