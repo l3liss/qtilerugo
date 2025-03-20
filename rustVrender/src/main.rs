@@ -6,35 +6,32 @@ use std::thread;
 use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio::net::UnixListener;
 use serde::Deserialize;
+use serde_json;
 
 use winit::event::{Event, WindowEvent};
 use winit::event_loop::{ControlFlow, EventLoop};
 use winit::window::WindowBuilder;
 
-// Vulkan and vulkano-win imports:
+// Vulkan and Vulkano imports:
 use vulkano::VulkanLibrary;
 use vulkano::instance::{Instance, InstanceCreateInfo, InstanceExtensions};
-use vulkano_win::create_surface_from_winit;
 use vulkano::device::{Device, DeviceCreateInfo, DeviceExtensions, QueueCreateInfo};
+use vulkano::swapchain::Surface; // Use the new API
 
 /// Defines commands that the window renderer understands.
-/// Currently, we support only a spawn window command.
 #[derive(Debug, Deserialize)]
 enum RendererCommand {
     SpawnWindow,
-    // You can add more variants here as needed.
+    // You can add more commands here.
 }
 
 /// Listens for JSON-encoded commands on a Unix socket.
 async fn listen_for_commands(socket_path: &str) -> tokio::io::Result<()> {
-    // Remove an existing socket file if it exists.
     if Path::new(socket_path).exists() {
-        fs::remove_file(socket_path)
-            .expect("failed to remove existing socket file");
+        fs::remove_file(socket_path).expect("failed to remove existing socket file");
     }
     let listener = UnixListener::bind(socket_path)?;
     println!("Listening on Unix socket: {}", socket_path);
-    
     loop {
         let (stream, _) = listener.accept().await?;
         tokio::spawn(async move {
@@ -43,11 +40,9 @@ async fn listen_for_commands(socket_path: &str) -> tokio::io::Result<()> {
             while let Ok(Some(line)) = lines.next_line().await {
                 let trimmed = line.trim();
                 println!("Received raw command: {}", trimmed);
-                // Parse the incoming command as JSON.
                 match serde_json::from_str::<RendererCommand>(trimmed) {
                     Ok(RendererCommand::SpawnWindow) => {
                         println!("Spawning window...");
-                        // Use a new thread because the winit event loop blocks.
                         thread::spawn(|| {
                             create_window();
                         });
@@ -71,7 +66,7 @@ fn create_window() {
         .expect("Failed to create window");
     let window = Arc::new(window);
 
-    // Create a Vulkan instance.
+    // Create Vulkan instance.
     let library = VulkanLibrary::new().expect("failed to load Vulkan library");
     let instance = Instance::new(
         library,
@@ -82,29 +77,29 @@ fn create_window() {
     )
     .expect("failed to create Vulkan instance");
 
-    // Create a Vulkan surface from the window.
-    let surface = create_surface_from_winit(window.clone(), instance.clone())
+    // Create a Vulkan surface from the window using the new API.
+    let surface = Surface::from_window(instance.clone(), window.clone())
         .expect("failed to create Vulkan surface");
 
-    // Find a suitable physical device.
+    // Enumerate physical devices.
     let physical = instance
         .enumerate_physical_devices()
         .expect("Failed to enumerate physical devices")
         .next()
         .expect("No physical device found");
 
-    // Choose a queue family that supports graphics and presentation.
+    // Find a queue family that supports graphics and presentation.
     let queue_family = physical.queue_family_properties()
         .iter()
         .enumerate()
         .find(|(index, q)| {
             q.queue_flags.contains(vulkano::device::QueueFlags::GRAPHICS)
-                && physical.surface_support(*index as u32, &surface).unwrap_or(false)
+                && physical.surface_support(*index as u32, &*surface).unwrap_or(false)
         })
         .map(|(index, _)| index as u32)
         .expect("Couldn't find a graphical queue family that supports presentation");
 
-    // Create queue info.
+    // Create the queue.
     let queue_create_info = QueueCreateInfo {
         queue_family_index: queue_family,
         queues: vec![1.0],
