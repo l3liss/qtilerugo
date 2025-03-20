@@ -4,7 +4,10 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-tokio = { version = "1", features = ["full"] }
-winit = "0.27"           # Use v0.27 so vulkano-win and our code agree
-vulkano = "0.35"
-vulkano-win = "0.34"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+tokio = { version = "1.24", features = ["full"] }
+winit = "0.28.7"
+vulkano = "0.34.0"
+vulkano-win = "0.34.0"
+
