@@ -1,0 +1,7 @@
+[commands]
+focus_left = "move_focus -x -1"
+focus_right = "move_focus -x 1"
+spawn_terminal = "spawn alacritty"
+close_window = "close_window"
+# Add the rest of your commands as needed...
+
