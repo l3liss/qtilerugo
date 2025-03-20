@@ -96,16 +96,15 @@ impl WindowManager {
             },
             "close_window" => {
                 println!("Killing window");
-                if let Some(window) = self.conn.get_input_focus()?.reply()?.focus {
-                    self.conn.destroy_window(window)?;
-                }
+                let window = self.conn.get_input_focus()?.reply()?.focus;
+                println!("Destroying window: {}", window);
+                self.conn.destroy_window(window)?;
             },
             _ => println!("Unknown command: {}", command),
         }
         Ok(())
     }
 }
-
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Load configuration
