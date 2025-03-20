@@ -1,0 +1,89 @@
+xcb_wm_bridge
+
+A lightweight Rust-based command bridge that uses x11rb to interact with X11 and execute window management commands. It listens on a Unix socket for JSON-encoded commands and triggers actions—such as focusing windows, spawning a terminal, or killing a window—based on a configurable TOML file.
+Features
+
+    X11 Integration:
+    Uses x11rb to connect and interact with the X server for managing windows.
+
+    Async Command Listener:
+    Built with Tokio to asynchronously listen on a Unix socket for incoming commands.
+
+    Configurable Commands:
+    Loads command mappings from a TOML configuration file (wm_config.toml), allowing you to customize the shell commands executed for various window management actions.
+
+    JSON Command Parsing:
+    Uses Serde to deserialize incoming JSON commands into Rust enum variants.
+
+How It Works
+
+    Command Listening:
+    The bridge listens on a Unix socket (e.g., /tmp/x11rb_wm.sock) for JSON commands.
+
+    Configuration:
+    It loads a configuration file (wm_config.toml) that maps high-level commands (like "FocusLeft", "SpawnTerminal", etc.) to the actual shell commands or X11 actions.
+
+    Command Execution:
+    When a command is received, it is matched against your configuration. The corresponding action (e.g., focus left, spawn a terminal, or kill a window) is then executed via x11rb or a system command.
+
+Usage
+Build and Run
+
+    Clone the Repository:
+
+git clone https://github.com/yourusername/xcb_wm_bridge.git
+cd xcb_wm_bridge
+
+Build the Project:
+
+cargo build --release
+
+Run the Application:
+
+    cargo run
+
+Testing Commands
+
+To test the command bridge, open a new terminal and send a JSON command to the Unix socket using a tool like netcat. For example:
+
+    Spawn a Terminal:
+
+echo '"SpawnTerminal"' | nc -U /tmp/x11rb_wm.sock
+
+Focus Left:
+
+    echo '"FocusLeft"' | nc -U /tmp/x11rb_wm.sock
+
+Ensure that the socket path in your configuration matches the one in your command (default in code is /tmp/x11rb_wm.sock).
+
+Integration with Qtile
+
+You can trigger xcb_wm_bridge from your Qtile configuration by adding keybindings that send JSON commands to the Unix socket. For example, in your keys.py:
+
+from libqtile.config import Key
+from libqtile.lazy import lazy
+
+mod = "mod4"
+keys = [
+    # Spawn terminal via the bridge.
+    Key([mod], "Return", lazy.spawn("echo '\"SpawnTerminal\"' | nc -U /tmp/x11rb_wm.sock")),
+    
+    # Focus left via the bridge.
+    Key([mod], "h", lazy.spawn("echo '\"FocusLeft\"' | nc -U /tmp/x11rb_wm.sock")),
+    
+    # Add additional keybindings as needed.
+]
+
+Reload your Qtile configuration after making changes.
+Dependencies
+
+    Rust and Cargo
+    x11rb
+    Tokio
+    Serde & serde_json
+    toml
+
+Ensure your Cargo.toml includes the required dependencies.
+License
+
+This project is licensed under the MIT License. See the LICENSE file for details.
