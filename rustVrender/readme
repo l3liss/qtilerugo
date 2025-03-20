@@ -1,0 +1,78 @@
+Rust Window Renderer
+
+A simple Rust-based window renderer that listens for JSON commands on a Unix socket and responds by either spawning a Vulkan-rendered window or launching an external status bar (written in Go). This project is designed to work as a command bridge for window managers like Qtile.
+Features
+
+    Asynchronous Command Listener:
+    Uses Tokio to listen on a Unix socket for incoming JSON commands.
+
+    JSON Command Parsing:
+    Parses commands with serde and serde_json.
+
+    Vulkan Window Creation:
+    Creates a window using winit and renders it using vulkano.
+
+    External Application Spawning:
+    Spawns an external Go status bar application (or any other executable) using a relative path.
+
+How It Works
+
+    Socket Listener:
+    The renderer listens on a Unix socket (default: /tmp/rust_qtile_helper.sock) for incoming JSON commands.
+
+    Command Handling:
+        SpawnWindow: Spawns a new Vulkan window.
+        SpawnStatusBar: Executes the Go status bar executable located in the project root.
+
+    Integration with Qtile:
+    You can trigger these commands from your Qtile configuration using keybindings that send JSON commands to the Unix socket.
+
+Usage
+Running the Renderer
+
+    Build and Run:
+
+cargo build
+cargo run
+
+Test Commands:
+
+Open a new terminal and send commands using netcat:
+
+    Spawn a Vulkan Window:
+
+echo '"SpawnWindow"' | nc -U /tmp/rust_qtile_helper.sock
+
+Spawn the Go Status Bar:
+
+        echo '"SpawnStatusBar"' | nc -U /tmp/rust_qtile_helper.sock
+
+Integration with Qtile
+
+Add a keybinding in your Qtile configuration (keys.py) that sends the desired JSON command. For example:
+
+from libqtile.config import Key
+from libqtile.lazy import lazy
+
+mod = "mod4"
+keys = [
+    # Spawns a Vulkan window.
+    Key([mod], "w", lazy.spawn("echo '\"SpawnWindow\"' | nc -U /tmp/rust_qtile_helper.sock")),
+    
+    # Spawns the Go status bar.
+    Key([mod], "s", lazy.spawn("echo '\"SpawnStatusBar\"' | nc -U /tmp/rust_qtile_helper.sock")),
+]
+
+Dependencies
+
+    Rust and Cargo
+    Tokio
+    Serde & serde_json
+    Winit
+    Vulkano
+    vulkano-win
+
+Ensure your Cargo.toml includes the necessary dependencies with compatible versions.
+License
+
+This project is licensed under the MIT License. See the LICENSE file for details.
